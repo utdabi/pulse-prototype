@@ -657,7 +657,7 @@ app.get("/submit", (c) => {
             id="image" 
             accept="image/*"
           />
-          <div class="file-hint">PNG, JPG, or GIF - Helps us understand visual issues</div>
+          <div class="file-hint">PNG, JPG, or GIF - See it? Show it. Screenshots speed up our debugging."</div>
         </div>
         
         <div class="button-group">

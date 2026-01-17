@@ -9,6 +9,299 @@ interface Bindings {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
+// Feature 5: Customer Pulse Dashboard - Landing Page
+app.get("/", async (c) => {
+  try {
+    // Query all feedback records, sorted by urgency (DESC) then timestamp (DESC)
+    const { results } = await c.env.DB.prepare(
+      "SELECT * FROM feedback ORDER BY urgency DESC, timestamp DESC"
+    ).all();
+
+    const feedbackRecords = results as Array<{
+      id: number;
+      source: string;
+      content: string;
+      sentiment: string;
+      urgency: number;
+      image_key: string | null;
+      timestamp: string;
+    }>;
+
+    // Calculate stats
+    const totalCount = feedbackRecords.length;
+    const criticalCount = feedbackRecords.filter((f) => f.urgency === 5).length;
+    const highCount = feedbackRecords.filter((f) => f.urgency === 4).length;
+    const mediumCount = feedbackRecords.filter((f) => f.urgency === 3).length;
+
+    // Generate HTML dashboard
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulse - Customer Feedback Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    header {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2d3748;
+      margin-bottom: 15px;
+      font-size: 32px;
+    }
+    .stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .stat {
+      background: #f7fafc;
+      padding: 15px 25px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+    .stat-label { font-size: 12px; color: #718096; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-value { font-size: 24px; font-weight: bold; color: #2d3748; }
+    
+    /* Table-like layout */
+    .feedback-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .feedback-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 200px;
+      border-bottom: 1px solid #e2e8f0;
+      transition: background 0.2s;
+      align-items: start;
+    }
+    .feedback-row:last-child {
+      border-bottom: none;
+    }
+    .feedback-row:hover {
+      background: #f7fafc;
+    }
+    
+    .sentiment-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      border-right: 2px solid #e2e8f0;
+      min-height: 100%;
+    }
+    .sentiment-emoji {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    .urgency-number {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2d3748;
+    }
+    .urgency-5 .sentiment-col { background: #fff5f5; border-right-color: #fc8181; }
+    .urgency-4 .sentiment-col { background: #fffaf0; border-right-color: #f6ad55; }
+    .urgency-3 .sentiment-col { background: #fefcbf; border-right-color: #f6e05e; }
+    .urgency-2 .sentiment-col { background: #ebf8ff; border-right-color: #63b3ed; }
+    .urgency-1 .sentiment-col { background: #f0fff4; border-right-color: #68d391; }
+    
+    .content-col {
+      padding: 20px;
+      border-right: 1px solid #e2e8f0;
+    }
+    .feedback-text {
+      color: #2d3748;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .screenshot-thumb {
+      max-width: 150px;
+      max-height: 100px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      border: 2px solid #e2e8f0;
+    }
+    .screenshot-thumb:hover {
+      opacity: 0.8;
+      border-color: #667eea;
+    }
+    
+    .meta-col {
+      padding: 20px;
+      font-size: 13px;
+      color: #718096;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .no-feedback {
+      background: white;
+      border-radius: 12px;
+      padding: 60px;
+      text-align: center;
+      color: #718096;
+    }
+    .submit-link {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 12px 30px;
+      border-radius: 8px;
+      text-decoration: none;
+      margin-top: 20px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .submit-link:hover { background: #5a67d8; }
+    
+    @media (max-width: 768px) {
+      .feedback-row {
+        grid-template-columns: 1fr;
+      }
+      .sentiment-col {
+        border-right: none;
+        border-bottom: 2px solid #e2e8f0;
+      }
+      .content-col {
+        border-right: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔔 Pulse - Customer Feedback Dashboard</h1>
+      <p>Prioritized by AI-analyzed urgency</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Total Feedback</div>
+          <div class="stat-value">${totalCount}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Critical (5)</div>
+          <div class="stat-value" style="color: #e53e3e;">${criticalCount}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">High (4)</div>
+          <div class="stat-value" style="color: #dd6b20;">${highCount}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Medium (3)</div>
+          <div class="stat-value" style="color: #d69e2e;">${mediumCount}</div>
+        </div>
+      </div>
+    </header>
+
+    ${
+      feedbackRecords.length === 0
+        ? `
+    <div class="no-feedback">
+      <h2>No feedback yet</h2>
+      <p>Start by submitting feedback through the API or submission form.</p>
+      <a href="/submit" class="submit-link">Submit Feedback</a>
+    </div>
+    `
+        : `
+    <div class="feedback-table">
+      ${feedbackRecords
+        .map(
+          (record) => `
+        <div class="feedback-row urgency-${record.urgency}">
+          <div class="sentiment-col">
+            <div class="sentiment-emoji">
+              ${
+                record.sentiment === "positive"
+                  ? "😊"
+                  : record.sentiment === "negative"
+                    ? "😞"
+                    : "😐"
+              }
+            </div>
+            <div class="urgency-number">${record.urgency}</div>
+          </div>
+          <div class="content-col">
+            <div class="feedback-text">${record.content}</div>
+            ${
+              record.image_key
+                ? `<img src="/api/image/${encodeURIComponent(record.image_key)}" alt="Screenshot" class="screenshot-thumb" onclick="window.open(this.src, '_blank')" title="Click to view full size">`
+                : ""
+            }
+          </div>
+          <div class="meta-col">
+            <div class="meta-item">📍 ${record.source}</div>
+            <div class="meta-item">🕒 ${new Date(record.timestamp).toLocaleString()}</div>
+            <div class="meta-item" style="text-transform: capitalize;">💭 ${record.sentiment}</div>
+          </div>
+        </div>
+      `
+        )
+        .join("")}
+    </div>
+    `
+    }
+  </div>
+</body>
+</html>
+`;
+
+    return c.html(html);
+  } catch (error) {
+    return c.text("Failed to load dashboard: " + (error instanceof Error ? error.message : String(error)), 500);
+  }
+});
+
+// Feature 5: R2 Image Proxy - Secure image retrieval
+app.get("/api/image/:key", async (c) => {
+  try {
+    const key = c.req.param("key");
+    
+    // Security: Only allow images from feedback/ prefix
+    if (!key.startsWith("feedback/")) {
+      return c.text("Invalid image key", 403);
+    }
+
+    const object = await c.env.IMAGES.get(key);
+    if (!object) {
+      return c.text("Image not found", 404);
+    }
+
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set("Cache-Control", "public, max-age=31536000");
+
+    return new Response(object.body, { headers });
+  } catch (error) {
+    return c.text("Failed to retrieve image: " + (error instanceof Error ? error.message : String(error)), 500);
+  }
+});
+
 // Health check endpoint
 app.get("/status", (c) => {
   return c.json({

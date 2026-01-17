@@ -2,6 +2,14 @@ name = "product-pulse"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
-# Environment bindings will be added as features are implemented
-# Feature 2 will add: D1 database and R2 bucket
+# Feature 2: D1 Database and R2 Storage
+[[d1_databases]]
+binding = "DB"
+database_name = "pulse_db"
+database_id = "03bb0256-0c26-4776-870d-beefcf18916f"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "pulse-images"
+
 # Feature 3 will add: Workers AI binding

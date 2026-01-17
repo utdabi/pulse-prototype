@@ -17,5 +17,39 @@
   - Status: 200 OK
   - Response: {"status":"ok","message":"Pulse application is running","timestamp":"..."}
 
+## Feature 2: Persistent Storage Layer (D1 & R2) [COMPLETE]
+**Completed:** 2026-01-17
+
+### Implementation Details:
+- ✅ Provisioned D1 database `pulse_db` (ID: 03bb0256-0c26-4776-870d-beefcf18916f)
+- ✅ Provisioned R2 bucket `pulse-images`
+- ✅ Updated wrangler.toml with D1 and R2 bindings
+- ✅ Created database migration (0001_create_feedback_table.sql)
+- ✅ Defined feedback table schema (id, source, content, sentiment, urgency, image_key, timestamp)
+- ✅ Added indexes on urgency and timestamp for optimized queries
+- ✅ Applied migrations to both local and remote databases
+- ✅ Installed @cloudflare/workers-types package
+- ✅ Created tsconfig.json for TypeScript configuration
+- ✅ Updated TypeScript bindings (DB: D1Database, IMAGES: R2Bucket)
+
+### Validation Results:
+- Development server running with bindings: DB (pulse_db), IMAGES (pulse-images)
+- GET /test/db endpoint:
+  - Status: 200 OK
+  - Successfully inserted test record to D1
+  - Successfully retrieved record from D1
+  - Response: {"status":"ok","message":"D1 Database connection successful","recordCount":1,...}
+- GET /test/r2 endpoint:
+  - Status: 200 OK
+  - Successfully uploaded test file to R2
+  - Successfully retrieved file from R2
+  - Content match: true
+  - Response: {"status":"ok","message":"R2 Storage connection successful",...}
+
+### Architecture:
+- Structured metadata stored in D1 SQL Database (fast queries)
+- Binary files (screenshots) stored in R2 Object Storage (scalable)
+- Separation ensures database remains performant
+
 ### Next Feature:
-Feature 2: Persistent Storage Layer (D1 & R2) - Awaiting approval to proceed
+Feature 3: Intelligence Layer (Workers AI) - Awaiting approval to proceed

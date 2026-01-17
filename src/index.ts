@@ -197,8 +197,13 @@ app.get("/", async (c) => {
 <body>
   <div class="container">
     <header>
-      <h1>🔔 Pulse - Customer Feedback Dashboard</h1>
-      <p>Prioritized by AI-analyzed urgency</p>
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+        <div>
+          <h1 style="margin-bottom: 5px;">🔔 Pulse - Customer Feedback Dashboard</h1>
+          <p style="margin: 0;">Prioritized by AI-analyzed urgency</p>
+        </div>
+        <a href="/submit" class="submit-link" style="margin: 0;">+ Submit Feedback</a>
+      </div>
       <div class="stats">
         <div class="stat">
           <div class="stat-label">Total Feedback</div>
@@ -471,6 +476,246 @@ app.get("/test/ai", async (c) => {
       },
       500
     );
+  }
+});
+
+// Feature 6: Manual Submission Interface - GET form
+app.get("/submit", (c) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Feedback - Pulse</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+    }
+    .form-card {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2d3748;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: #718096;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      color: #2d3748;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .required {
+      color: #e53e3e;
+    }
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    input[type="file"]:hover {
+      border-color: #667eea;
+    }
+    .file-hint {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 5px;
+    }
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    button {
+      flex: 1;
+      padding: 14px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .submit-btn {
+      background: #667eea;
+      color: white;
+    }
+    .submit-btn:hover {
+      background: #5a67d8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .cancel-btn {
+      background: #e2e8f0;
+      color: #2d3748;
+    }
+    .cancel-btn:hover {
+      background: #cbd5e0;
+    }
+    .back-link {
+      display: inline-block;
+      color: white;
+      text-decoration: none;
+      margin-bottom: 20px;
+      font-size: 14px;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to Dashboard</a>
+    <div class="form-card">
+      <h1>📝 Submit Feedback</h1>
+      <p class="subtitle">Help us improve by sharing your thoughts</p>
+      
+      <form method="POST" action="/submit" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="content">
+            Feedback <span class="required">*</span>
+          </label>
+          <textarea 
+            name="content" 
+            id="content" 
+            required
+            placeholder="Describe your experience, bug report, or suggestion..."
+          ></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="source">
+            Source <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            name="source" 
+            id="source" 
+            value="web"
+            required
+            placeholder="e.g., web, mobile, email"
+          />
+        </div>
+        
+        <div class="form-group">
+          <label for="image">
+            Screenshot (optional)
+          </label>
+          <input 
+            type="file" 
+            name="image" 
+            id="image" 
+            accept="image/*"
+          />
+          <div class="file-hint">PNG, JPG, or GIF - Helps us understand visual issues</div>
+        </div>
+        
+        <div class="button-group">
+          <button type="button" class="cancel-btn" onclick="window.location.href='/'">
+            Cancel
+          </button>
+          <button type="submit" class="submit-btn">
+            Submit Feedback
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+`;
+  
+  return c.html(html);
+});
+
+// Feature 6: Manual Submission Interface - POST handler
+app.post("/submit", async (c) => {
+  try {
+    // Parse multipart form data
+    const formData = await c.req.formData();
+    const content = formData.get("content") as string;
+    const source = formData.get("source") as string;
+    const imageEntry = formData.get("image");
+
+    // Validate required fields
+    if (!content || !source) {
+      return c.text("Missing required fields: content and source are required", 400);
+    }
+
+    // Step 1: Handle image upload to R2 (if present)
+    let imageKey: string | null = null;
+    if (imageEntry && typeof imageEntry !== 'string') {
+      const file = imageEntry as File;
+      if (file.size > 0) {
+        imageKey = `feedback/${Date.now()}-${file.name}`;
+        await c.env.IMAGES.put(imageKey, file.stream());
+      }
+    }
+
+    // Step 2: Send text content to Workers AI for classification
+    const aiResult = await classifyFeedback(content, c.env.AI);
+
+    // Step 3: Insert the complete record into D1
+    await c.env.DB.prepare(
+      "INSERT INTO feedback (source, content, sentiment, urgency, image_key) VALUES (?, ?, ?, ?, ?)"
+    )
+      .bind(source, content, aiResult.sentiment, aiResult.urgency, imageKey)
+      .run();
+
+    // Step 4: Redirect to dashboard (crucial requirement)
+    return c.redirect("/");
+  } catch (error) {
+    return c.text("Failed to submit feedback: " + (error instanceof Error ? error.message : String(error)), 500);
   }
 });
 

@@ -85,5 +85,53 @@
   - Test 4: "Slow loading" → Correctly identified as high priority
   - Response: {"status":"ok","message":"Workers AI classification successful",...}
 
+## Feature 4: Ingestion Pipeline (Webhook Logic) [COMPLETE]
+**Completed:** 2026-01-17
+
+### Implementation Details:
+- ✅ Created `POST /api/feedback` endpoint
+- ✅ Handles multipart/form-data parsing
+- ✅ Validates required fields (content, source)
+- ✅ Optional image file upload support
+- ✅ Streams images to R2 with unique keys (`feedback/{timestamp}-{filename}`)
+- ✅ Sends text content to Workers AI for classification
+- ✅ Parses AI response into structured variables (sentiment, urgency)
+- ✅ Inserts complete record into D1 (text + AI scores + image key)
+- ✅ Returns structured success response with all metadata
+
+### Data Flow:
+1. Receive POST request → Parse multipart/form-data
+2. Extract: source, content, image (optional)
+3. If image present → Upload to R2 → Get image_key
+4. Send text → Workers AI → Get { sentiment, urgency }
+5. Insert record → D1: (source, content, sentiment, urgency, image_key)
+6. Return success response with record ID and metadata
+
+### Validation Results:
+- Created test script (test-ingest.js) with Node.js
+
+**Test 1: Text only (no image)**
+- Input: "The app crashes when I try to submit the form!"
+- Response: 200 OK
+- Sentiment: "negative" ✅
+- Urgency: 5 (critical) ✅
+- Image Key: null ✅
+- D1 Record ID: 2 ✅
+
+**Test 2: Text + image**
+- Input: "The button is slightly misaligned on the homepage" + test-image.png
+- Response: 200 OK
+- Sentiment: "negative" ✅
+- Urgency: 3 (medium) ✅
+- Image Key: "feedback/1768630848198-test-image.png" ✅
+- D1 Record ID: 3 ✅
+- Image uploaded to R2 successfully ✅
+
+### Integration Success:
+- All three features work seamlessly together:
+  - Feature 2 (D1 + R2) → Stores data
+  - Feature 3 (Workers AI) → Classifies feedback
+  - Feature 4 (Ingestion) → Orchestrates everything
+
 ### Next Feature:
-Feature 4: Ingestion Pipeline (Webhook Logic) - Awaiting approval to proceed
+Feature 5: Customer Pulse Dashboard (Read View) - Awaiting approval to proceed

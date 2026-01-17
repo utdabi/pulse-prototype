@@ -181,4 +181,70 @@ app.get("/test/ai", async (c) => {
   }
 });
 
+// Feature 4: Ingestion Pipeline - POST endpoint
+app.post("/api/feedback", async (c) => {
+  try {
+    // Parse multipart form data
+    const formData = await c.req.formData();
+    const content = formData.get("content") as string;
+    const source = formData.get("source") as string;
+    const imageEntry = formData.get("image");
+
+    // Validate required fields
+    if (!content || !source) {
+      return c.json(
+        {
+          status: "error",
+          message: "Missing required fields: 'content' and 'source' are required",
+        },
+        400
+      );
+    }
+
+    // Step 1: Handle image upload to R2 (if present)
+    let imageKey: string | null = null;
+    if (imageEntry && typeof imageEntry !== 'string') {
+      // imageEntry is a File
+      const file = imageEntry as File;
+      if (file.size > 0) {
+        imageKey = `feedback/${Date.now()}-${file.name}`;
+        await c.env.IMAGES.put(imageKey, file.stream());
+      }
+    }
+
+    // Step 2: Send text content to Workers AI for classification
+    const aiResult = await classifyFeedback(content, c.env.AI);
+
+    // Step 3: Insert the complete record into D1
+    const result = await c.env.DB.prepare(
+      "INSERT INTO feedback (source, content, sentiment, urgency, image_key) VALUES (?, ?, ?, ?, ?)"
+    )
+      .bind(source, content, aiResult.sentiment, aiResult.urgency, imageKey)
+      .run();
+
+    return c.json({
+      status: "success",
+      message: "Feedback ingested successfully",
+      data: {
+        id: result.meta.last_row_id,
+        source,
+        content,
+        sentiment: aiResult.sentiment,
+        urgency: aiResult.urgency,
+        imageKey,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    return c.json(
+      {
+        status: "error",
+        message: "Failed to ingest feedback",
+        error: error instanceof Error ? error.message : String(error),
+      },
+      500
+    );
+  }
+});
+
 export default app;

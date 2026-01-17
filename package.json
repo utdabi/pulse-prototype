@@ -1,0 +1,14 @@
+{
+  "name": "product-pulse",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.59.2"
+  },
+  "dependencies": {
+    "hono": "^4.11.4"
+  }
+}

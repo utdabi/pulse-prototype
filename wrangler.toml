@@ -1,0 +1,7 @@
+name = "product-pulse"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Environment bindings will be added as features are implemented
+# Feature 2 will add: D1 database and R2 bucket
+# Feature 3 will add: Workers AI binding

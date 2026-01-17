@@ -12,4 +12,6 @@ database_id = "03bb0256-0c26-4776-870d-beefcf18916f"
 binding = "IMAGES"
 bucket_name = "pulse-images"
 
-# Feature 3 will add: Workers AI binding
+# Feature 3: Workers AI
+[ai]
+binding = "AI"

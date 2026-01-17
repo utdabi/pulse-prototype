@@ -31,10 +31,11 @@
 
 ### Feature 3: Intelligence Layer (Workers AI)
 - **User Story:** "As a Support Lead, I need incoming feedback to be automatically scored for 'Urgency' so my team doesn't waste time manually triaging low-priority items."
+- **Urgency Scale:** 1-5 (1=Low, 2=Normal, 3=Medium, 4=High, 5=Critical)
 - **Steps:**
     1. Configure **Native** Workers AI access (`env.AI`) in `wrangler.toml` (Do NOT use external AI SDKs).
     2. Develop a processing function to evaluate incoming text payloads.
-    3. Design a prompt to enforce structured output: `{ "sentiment": "string", "urgency": number }`.
+    3. Design a prompt to enforce structured output: `{ "sentiment": "string", "urgency": number (1-5) }`.
     4. Test the AI classification logic against a set of mock feedback strings.
 
 ### Feature 4: Ingestion Pipeline (Webhook Logic)
